@@ -1,6 +1,6 @@
 # buildspace  (waveportal)
 
-buildspace project
+buildspace Intro to Web3 project
 
 ## Install the dependencies
 ```bash
