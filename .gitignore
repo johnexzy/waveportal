@@ -1,7 +1,7 @@
 .DS_Store
 .thumbs.db
 node_modules
-# token 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
+# token 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
 # Quasar core related directories
 .quasar
 /dist
