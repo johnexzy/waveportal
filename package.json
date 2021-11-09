@@ -8,6 +8,7 @@
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "test": "echo \"No test specified\" && exit 0",
+    "copy-abi": "copy C:\\Users\\hp\\hardhat-tutorial\\artifacts\\contracts\\WavePortal.sol\\WavePortal.json src\\utils",
     "dev": "cross-env NODE_OPTIONS=--openssl-legacy-provider quasar dev",
     "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider quasar build",
     "start": "node server.js"
