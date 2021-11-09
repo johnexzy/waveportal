@@ -25,6 +25,7 @@
               icon="fas fa-paper-plane"
               v-if="currentAccount"
               class="waveButton"
+              :loading="mining"
               @click="wave"
             />
 
@@ -39,7 +40,9 @@
               <tr>
                 <th colspan="6">
                   <div class="text-bold">
-                    <div class="q-ml-md text-grey">People who said Hi to John</div>
+                    <div class="q-ml-md text-grey">
+                      People who said Hi to John
+                    </div>
                   </div>
                 </th>
               </tr>
@@ -71,15 +74,33 @@ export default {
   name: "MainLayout",
   data() {
     return {
-      contractAddress: "0xd7330b49C165600b0fAc9D424B7aC3962daD0105",
+      contractAddress: "0xFee0C0341E755B2fD5A58251Cb5CBE40c4154a59",
       contractABI: abi.abi,
       currentAccount: null,
       msg: "",
       allWaves: [],
+      mining: false,
     };
   },
   mounted() {
     this.checkIfWalletIsConnected();
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      wavePortalContract = new ethers.Contract(
+        this.contractAddress,
+        this.contractABI,
+        signer
+      );
+      wavePortalContract.on("NewWave", this.addWaveToListBeforeMine);
+    }
+
+    return () => {
+      if (wavePortalContract) {
+        wavePortalContract.off("NewWave", this.addWaveToListBeforeMine);
+      }
+    };
   },
   methods: {
     async checkIfWalletIsConnected() {
@@ -149,11 +170,15 @@ export default {
            * Execute the actual wave from your smart contract
            */
           const waveTxn = await wavePortalContract.wave(
-            !this.msg ? "👋" : this.msg
+            !this.msg ? "👋" : this.msg,
+            { gasLimit: 300000 }
           );
+          this.setMining();
+
           console.log("Mining...", waveTxn.hash);
 
           await waveTxn.wait();
+          this.setMining();
           console.log("Mined -- ", waveTxn.hash);
 
           count = await wavePortalContract.getTotalWaves();
@@ -189,7 +214,7 @@ export default {
            */
           let wavesCleaned = [];
           waves.forEach((wave) => {
-            wavesCleaned.push({
+            wavesCleaned.unshift({
               address: wave.waver,
               timestamp: new Date(wave.timestamp * 1000),
               message: wave.message,
@@ -208,11 +233,21 @@ export default {
         console.log(error);
       }
     },
+    addWaveToListBeforeMine(from, timestamp, message) {
+      this.allWaves.unshift({
+        address: from,
+        timestamp: new Date(timestamp * 1000),
+        message: message,
+      });
+    },
     setCurrentAccount(account) {
       this.currentAccount = account;
     },
     setAllWaves(waves) {
       this.allWaves = waves;
+    },
+    setMining() {
+      this.mining = !this.mining;
     },
   },
   filters: {
